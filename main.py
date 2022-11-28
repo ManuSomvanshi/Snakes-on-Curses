@@ -2,14 +2,13 @@ import curses
 from curses import wrapper
 from random import randint
 
-
 stdscr = curses.initscr()   #initialise screen
 curses.noecho() #turn off automatic echoing of keys
-curses.curs_set(0)  #set cursor to zero
+curses.curs_set(False)  #set cursor to False
 #create a new window in the screen
 win = curses.newwin(40,80, 0, 0)
 win.keypad(True)
-win.border(0)
+win.border(0) #draw a border at the edges
 win.nodelay(True)
 
 #snake stuff
@@ -48,18 +47,21 @@ class Food():
         self.ch = food_ch
         self.pos = (randint(1,38), randint(1,78))
 
+    def realloc(self):
+        self.pos = (randint(1,38), randint(1,78))
+        win.addch(self.pos[0], self.pos[1], self.ch)
 
 def main(stdscr):
     snake = Snake("o")
     food = Food("a")
     key = 107
     score = 0
+    win.addstr(0,17, "SNAKES WITH VIM CONTROLS")
     win.addch(food.pos[0], food.pos[1], food.ch) #add initial food
 
     while True: #game loop
         win.addstr(0,2, "score: "+ str(score))
-        win.addstr(0,17, "SNAKES WITH VIM CONTROLS")
-        win.timeout(100 - len(snake.pos))
+        win.timeout(200 - (len(snake.pos)*4)) #wait time for key input reduces with snake length (looking for a better formula since this will stop break at len = 50)
 
         #dynamics
         usr_key = win.getch() #get user input
@@ -73,8 +75,8 @@ def main(stdscr):
         if snake.pos[0] == food.pos:
             score += 1
             snake.eat(key)
-            food = Food("a")
-            win.addch(food.pos[0], food.pos[1], food.ch)
+            food.realloc()
+
         else:
             snake.move(key)
         
@@ -98,5 +100,5 @@ def main(stdscr):
 #Ending the application
 curses.endwin()
 
-score = wrapper(main)
+score= wrapper(main)
 print(f"You Died. Your score is: {score}")
